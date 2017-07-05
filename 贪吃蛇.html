@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>贪吃蛇</title>
+</head>
+<script src="js/common.js"></script>
+<link rel="stylesheet" href="iconfont/icon/iconfont.css">
+<!--<script src="iconfont/icon/iconfont.css"></script>-->
+<style>
+    body,html{
+        width: 100%;
+        /*height: 100%;*/
+        margin: 0;
+        padding:0;
+    }
+    .content{
+        width:100%;
+        height:650px;
+        position: relative;
+    }
+    .content>.imgbox{
+        width:80%;
+        height:100%;
+        position:absolute;
+        top:0;
+        left:0;
+        right:0;
+        margin: auto;
+    }
+    .content>.imgbox>img{
+        position: relative;
+        margin: auto;
+        float: left;
+        width:50%;
+        height: 100%;
+        z-index: 5;
+    }
+    .box{
+        position: relative;
+        width: 600px;
+        height: 600px;
+        background:#8A5F28;
+        border:5px solid #E29150;
+        margin:0 auto;
+        /*margin-top: 10px;*/
+        z-index: 10;
+    }
+    .start{
+        position: absolute;
+        top:30%;
+        left:11%;
+        width:211px;
+        height: 103px;
+        z-index: 10;
+
+    }
+    .start>img{
+        width: 100%;
+        height: 100%;
+    }
+
+    .box>div{
+        position: relative;
+        width: 30px;
+        height:30px;
+        float: left;
+        background:#8A5F28;
+        border:1px solid rgba(255,255,255,0.4);
+        box-sizing: border-box;
+        z-index: 10;
+    }
+    .box>.she{
+        border-radius: 12px;
+        box-sizing: border-box;
+        border:8px solid #25A422;
+        background: #036A04;
+    }
+    .box>.food{
+        border-radius: 50%;
+        background:url("img/4.png") no-repeat;
+        background-size: contain;
+    }
+    .right>.imgbox1{
+        top:0;
+        width:70px;
+        height:70px;
+        position: absolute;
+        margin:auto;
+        right:20px;
+        background:url("img/3.png");
+        background-size: contain;
+        z-index: 11;
+        text-align: center;
+    }
+    .right>.imgbox1>img{
+        width: 100%;
+        height:100%;
+    }
+    .icon-xiayige:before{
+        margin-left: 8px;
+        line-height: 65px;
+        z-index: 20;
+        color: white;
+        font-size:30px;
+        rotation: 180deg;
+    }
+    .icon-zanting1:before{
+        line-height: 65px;
+        margin-top: 15px;
+        z-index: 20;
+        color: white;
+        font-size: 30px;
+    }
+    .icon-zhongxinkaishi:before{
+        line-height: 65px;
+        margin-top: 15px;
+        z-index: 20;
+        color: white;
+        font-size: 30px;
+    }
+    .score{
+        position: absolute;
+        top:0;
+        right: 150px;
+        width:200px;
+        height:70px;
+        margin: auto;
+        font-weight: bolder;
+        font-size: 24px;
+        color: white;
+        z-index: 33;
+        line-height: 60px;
+    }
+    .score span{
+        font-size: 40px;
+        color: red;
+    }
+</style>
+<body>
+<div class="content">
+    <div class="box"></div>
+    <div class="imgbox">
+        <img src="img/1.png" alt="">
+        <img src="img/1.png" alt="">
+    </div>
+    <div class="start">
+        <img src="img/2.png" alt="">
+    </div>
+    <div class="right">
+        <div class="score">
+            当前得分：
+            <span>0</span>
+        </div>
+        <div class="imgbox1" style="right:220px;top:180px">
+            <span class="iconfont icon-xiayige"></span>
+        </div>
+        <div class="imgbox1" style="right:220px;top:180px">
+            <span class="iconfont icon-zanting1"></span>
+        </div>
+        <div class="imgbox1" style="right:220px;top:330px">
+            <span class="iconfont icon-zhongxinkaishi"></span>
+        </div>
+
+    </div>
+
+</div>
+</body>
+<script>
+    let box=$('.box')
+    let imgboxx=$('.imgbox1',true);
+    let sc=0;
+    var way='right';
+    var newheadx,newheady;
+    let start=$('.start')
+    let t,s;
+    let oldhead;
+    let flag=0;
+    let she;
+
+    //创建div
+    for(let i=0;i<20;i++){
+        for(let j=0;j<20;j++){
+            let div=document.createElement('DIV')
+            div.id='r'+j+'-'+i;
+            box.appendChild(div)
+        }
+    }
+
+function game() {
+        flag++;
+    //蛇
+    she=[{x:0,y:0},{x:1,y:0},{x:2,y:0}]
+    she.forEach(function (value) {
+        var obj=$('#r'+value.x+'-'+value.y)
+        obj.classList.add('she');
+    })
+
+
+    //分数声明
+    var food=getFood();
+    function getFood() {
+        do{
+            var x=Math.floor(Math.random()*20);
+            var y=Math.floor(Math.random()*20);
+        }while (check(x,y));
+        var obj=$('#r'+x+'-'+y)
+        obj.classList.add('food')
+        //    分数写入
+        let fen=$('.score span')
+        fen.innerText=sc;
+        sc++;
+        return {x:x,y:y};
+    }
+
+
+    function check(m,n) {
+        var result=she.some(function (value) {
+            return value.x==m&&value.y==n;
+        })
+        return result;
+    }
+
+
+
+    function move() {
+        oldhead=she[she.length-1];
+        console.log(she)
+        switch (way){
+            case 'right':
+                newheadx=oldhead.x+1;
+                newheady=oldhead.y;
+                break;
+            case 'left':
+                newheadx=oldhead.x-1;
+                newheady=oldhead.y;
+                break;
+            case 'top':
+                newheadx=oldhead.x;
+                newheady=oldhead.y-1;
+                break;
+            case 'bottom':
+                newheadx=oldhead.x;
+                newheady=oldhead.y+1;
+                break;
+        }
+
+        if(newheadx<0||newheadx>19||newheady<0||newheady>19||check(newheadx,newheady)){
+            clearInterval(t);
+            alert('game over');
+            return
+        }
+        var newheadobj=$('#r'+newheadx+'-'+newheady)
+        newheadobj.className='she';
+        she.push({x:newheadx,y:newheady});
+        if(newheadx==food.x&&newheady==food.y){
+            food=getFood();
+        }else{
+            var endobj=$('#r'+she[0].x+'-'+she[0].y)
+            endobj.classList.remove('she');
+            she.shift()
+        }
+
+    }
+
+
+
+
+    document.onkeydown=function (e) {
+        var key=e.keyCode;//左37 上38  右39  下40
+        console.log(key)
+        if(key==37){
+            if(way=='right'){
+                return
+            }
+            way='left'
+        }
+        if(key==38){
+            if(way=='bottom'){
+                return
+            }
+            way='top'
+        }
+        if(key==39){
+            if(way=='left'){
+                return
+            }
+            way='right'
+        }
+        if(key==40){
+            if(way=='top'){
+                return
+            }
+            way='bottom'
+        }
+    }
+
+
+
+
+    s=setInterval(yid,3000)
+    function yid() {
+        animate(start,{left:160},500,function () {
+            animate(start,{left:140},2000)
+        })
+
+
+
+    }
+    start.onclick=function () {
+        clearInterval(s)
+        t=setInterval(move,200)
+    }
+
+    //暂停
+    imgboxx[1].addEventListener('click',function () {
+        imgboxx[1].style.display='none';
+        imgboxx[0].style.display='block';
+        clearInterval(t)
+    })
+    imgboxx[0].addEventListener('click',function () {
+        imgboxx[0].style.display='none';
+        imgboxx[1].style.display='block';
+        t=setInterval(move,200);
+    })
+
+}
+
+let aa=game;
+    aa();
+//    重新开始
+    imgboxx[2].addEventListener('click',function () {
+
+//        history.go(0)
+        aa=null;
+        let div=box.querySelectorAll('div')
+        clearInterval(t);
+
+        div.forEach(function (value) {
+            if(value.className=='she'){
+                value.classList.remove('she')
+            }
+            if(value.className=='food'){
+                value.classList.remove('food')
+            }
+        });
+        sc=0;
+        she=null;
+        way='right';
+        game()
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
